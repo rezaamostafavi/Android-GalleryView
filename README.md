@@ -5,18 +5,22 @@ A beautiful Gallery View (cover flow) for android platform , base on RecyclerVie
 Comming soon... 
 
 ##Build
-	###Step 1. Add the JitPack repository to your build file
-	allprojects {
-		repositories {
+	#####Step 1. Add the JitPack repository to your build file
+```build
+allprojects {
+	repositories {
 			...
-			maven { url 'https://jitpack.io' }
-		}
+			maven { url "https://jitpack.io" }
 	}
-	
-	###Step 2. Add the dependency
-	dependencies {
-	        compile 'com.github.rezaamostafavi:Android-GalleryView:v1.0.0'
-	}
+}
+```
+
+#####Step 2. Add the dependency
+```build
+dependencies {
+	compile 'com.github.rezaamostafavi:Android-GalleryView:v1.0.0'
+}
+```
 	
 ##Layout
 
