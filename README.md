@@ -2,7 +2,7 @@
 A beautiful Gallery View (cover flow) for android platform , base on RecyclerView.
 
 #Gif
-Comming soon... 
+<img src="https://github.com/rezaamostafavi/Android-GalleryView/blob/master/gif/help.gif?raw=true" width="40%" height="40%">
 
 ##Build
 	#####Step 1. Add the JitPack repository to your build file
