@@ -39,6 +39,10 @@ public class GalleryView extends RelativeLayout {
         void onClick(View view, int position);
     }
 
+    public interface OnSelectedItemChangedListener {
+        void onSelectedChange(View item, int position);
+    }
+
     public GalleryView(Context context) throws Exception {
         super(context);
         init(context, null);
@@ -148,6 +152,17 @@ public class GalleryView extends RelativeLayout {
         return 0;
     }
 
+    public OnSelectedItemChangedListener getSelectedItemChangedListener() {
+        if (fragment != null)
+            return fragment.getOnSelectedItemChangedListener();
+        return null;
+    }
+
+    public void setSelectedItemChangedListener(OnSelectedItemChangedListener selectedItemChangedListener) {
+        if (fragment != null)
+            fragment.setOnSelectedItemChangedListener(selectedItemChangedListener);
+    }
+
     public static class GalleryFragment extends Fragment {
 
         private Context mContext;
@@ -162,6 +177,7 @@ public class GalleryView extends RelativeLayout {
         Map<Integer, View> galleryViews = new HashMap<>();
         private float scale = 0;
         private float rotationY = 0;
+        private OnSelectedItemChangedListener onSelectedItemChangedListener;
 
         @Override
         public void onAttach(Context context) {
@@ -209,8 +225,7 @@ public class GalleryView extends RelativeLayout {
                         recyclerView.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                int x = selectedIndex * viewWidth;
-                                scrollToPosition(x);
+                                smoothRecycler(selectedIndex);
                             }
                         }, 100);
                     }
@@ -296,13 +311,15 @@ public class GalleryView extends RelativeLayout {
                 index = 0;
             if (index > adapter.getItemCount())
                 index = adapter.getItemCount();
-            int toPosition = (int) (index * viewWidth);
             selectedIndex = (int) index;
-            scrollToPosition(toPosition);
+            smoothRecycler(selectedIndex);
         }
 
-        private void scrollToPosition(final int x) {
-            recyclerView.smoothScrollBy(x - getCurrentX(), 0);
+        private void smoothRecycler(final int position) {
+            int toPosition = ((position) * viewWidth);
+            recyclerView.smoothScrollBy(toPosition - getCurrentX(), 0);
+            if (onSelectedItemChangedListener != null)
+                onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex), selectedIndex);
         }
 
         private RecyclerView.Adapter getThisAdapter() {
@@ -349,9 +366,8 @@ public class GalleryView extends RelativeLayout {
                                     if (onCenterViewClickListener != null)
                                         onCenterViewClickListener.onClick(holder.itemView, position - 1);
                                 } else {
-                                    int toPosition = (int) ((position - 1) * viewWidth);
                                     selectedIndex = position - 1;
-                                    scrollToPosition(toPosition);
+                                    smoothRecycler(selectedIndex);
                                 }
                             }
                         });
@@ -450,6 +466,9 @@ public class GalleryView extends RelativeLayout {
             if (recyclerView != null) {
                 int newPosition = selectedIndex * viewWidth;
                 recyclerView.scrollBy(newPosition - currentX, 0);
+                if (onSelectedItemChangedListener != null) {
+                    onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex), selectedIndex);
+                }
             }
         }
 
@@ -457,14 +476,21 @@ public class GalleryView extends RelativeLayout {
             if (selectedIndex < 0 || selectedIndex >= adapter.getItemCount())
                 throw new ArrayIndexOutOfBoundsException("Index is more than gallery size");
             this.selectedIndex = selectedIndex;
-            int newPosition = selectedIndex * viewWidth;
             if (recyclerView != null)
-                scrollToPosition(newPosition);
+                smoothRecycler(selectedIndex);
         }
 
         public void notifyDataSetChanged() {
             if (recyclerView != null && recyclerView.getAdapter() != null)
                 recyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        public OnSelectedItemChangedListener getOnSelectedItemChangedListener() {
+            return onSelectedItemChangedListener;
+        }
+
+        public void setOnSelectedItemChangedListener(OnSelectedItemChangedListener onSelectedItemChangedListener) {
+            this.onSelectedItemChangedListener = onSelectedItemChangedListener;
         }
     }
 
