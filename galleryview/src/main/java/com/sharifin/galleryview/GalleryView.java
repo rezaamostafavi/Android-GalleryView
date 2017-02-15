@@ -70,6 +70,7 @@ public class GalleryView extends RelativeLayout {
         inflater.inflate(R.layout.layout_main, this, true);
         float rotationY = 0, scale = 0;
 
+        int overScrollMode = -1;
         if (attrs != null) {
             TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.GalleryView);
             for (int i = 0; i < array.getIndexCount(); i++) {
@@ -80,6 +81,9 @@ public class GalleryView extends RelativeLayout {
                     rotationY = array.getFloat(attr, 0);
             }
             array.recycle();
+            int[] androidAttrs = new int[]{android.R.attr.overScrollMode};
+            TypedArray a = context.obtainStyledAttributes(attrs, androidAttrs);
+            overScrollMode = a.getInt(0, View.OVER_SCROLL_ALWAYS);
         }
 
         if (mContext instanceof FragmentActivity) {
@@ -92,6 +96,7 @@ public class GalleryView extends RelativeLayout {
         fragment = new GalleryFragment();
         this.fragment.setRotationY(rotationY);
         this.fragment.setScale(scale);
+        this.fragment.setOverScrollMode(overScrollMode);
         FragmentTransaction fragmentTransaction = supportFragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.mostafavi_galleryView_frameMain, fragment);
         fragmentTransaction.commit();
@@ -163,13 +168,24 @@ public class GalleryView extends RelativeLayout {
             fragment.setOnSelectedItemChangedListener(selectedItemChangedListener);
     }
 
+    public void setOverScrollMode(int overScrollMode) {
+        if (fragment != null)
+            fragment.setOverScrollMode(overScrollMode);
+    }
+
+    public RecyclerView getRecyclerView() {
+        if (fragment != null)
+            fragment.getRecyclerView();
+        return null;
+    }
+
     public static class GalleryFragment extends Fragment {
 
         private Context mContext;
         private RecyclerView recyclerView;
         private RecyclerView.Adapter adapter;
         private int pageWidth;
-        private int viewWidth;
+        private int viewWidth, overScrollMode;
         private int currentX = 0;
         private int width;
         private int selectedIndex = 0;
@@ -197,6 +213,8 @@ public class GalleryView extends RelativeLayout {
             if (adapter != null) {
                 setAdapter(adapter);
             }
+            if (overScrollMode != -1)
+                recyclerView.setOverScrollMode(overScrollMode);
             return view;
         }
 
@@ -494,6 +512,16 @@ public class GalleryView extends RelativeLayout {
 
         public void setOnSelectedItemChangedListener(OnSelectedItemChangedListener onSelectedItemChangedListener) {
             this.onSelectedItemChangedListener = onSelectedItemChangedListener;
+        }
+
+        public void setOverScrollMode(int overScrollMode) {
+            this.overScrollMode = overScrollMode;
+            if (recyclerView != null && overScrollMode != -1)
+                recyclerView.setOverScrollMode(overScrollMode);
+        }
+
+        public RecyclerView getRecyclerView() {
+            return recyclerView;
         }
     }
 
