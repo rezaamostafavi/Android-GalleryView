@@ -173,6 +173,7 @@ public class GalleryView extends RelativeLayout {
         private int currentX = 0;
         private int width;
         private int selectedIndex = 0;
+        private int lastIndex = -1;
         private OnCenterViewClickListener onCenterViewClickListener;
         Map<Integer, View> galleryViews = new HashMap<>();
         private float scale = 0;
@@ -318,8 +319,9 @@ public class GalleryView extends RelativeLayout {
         private void smoothRecycler(final int position) {
             int toPosition = ((position) * viewWidth);
             recyclerView.smoothScrollBy(toPosition - getCurrentX(), 0);
-            if (onSelectedItemChangedListener != null)
+            if (onSelectedItemChangedListener != null && lastIndex != selectedIndex)
                 onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex), selectedIndex);
+            lastIndex = selectedIndex;
         }
 
         private RecyclerView.Adapter getThisAdapter() {
@@ -466,9 +468,10 @@ public class GalleryView extends RelativeLayout {
             if (recyclerView != null) {
                 int newPosition = selectedIndex * viewWidth;
                 recyclerView.scrollBy(newPosition - currentX, 0);
-                if (onSelectedItemChangedListener != null) {
+                if (onSelectedItemChangedListener != null && lastIndex != selectedIndex) {
                     onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex), selectedIndex);
                 }
+                lastIndex = selectedIndex;
             }
         }
 
