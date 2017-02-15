@@ -5,7 +5,7 @@ A beautiful Gallery View (cover flow) for android platform , base on RecyclerVie
 <img src="https://github.com/rezaamostafavi/Android-GalleryView/blob/master/gif/help.gif?raw=true" width="40%" height="40%">
 
 ##Build
-	#####Step 1. Add the JitPack repository to your build file
+#####Step 1. Add the JitPack repository to your build file
 ```build
 allprojects {
 	repositories {
@@ -56,7 +56,7 @@ dependencies {
 ```lincense
 The MIT License (MIT)
 
-Copyright (c) 2015 Reza Mostafavi
+Copyright (c) 2017 Reza Mostafavi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
