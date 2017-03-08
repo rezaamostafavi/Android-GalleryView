@@ -185,8 +185,8 @@ public class GalleryView extends RelativeLayout {
         private RecyclerView recyclerView;
         private RecyclerView.Adapter adapter;
         private int pageWidth;
-        private int viewWidth, overScrollMode;
-        private int currentX = 0;
+        private static int viewWidth;
+        private int currentX = 0, overScrollMode;
         private int width;
         private int selectedIndex = 0;
         private int lastIndex = -1;
@@ -195,6 +195,7 @@ public class GalleryView extends RelativeLayout {
         private float scale = 0;
         private float rotationY = 0;
         private OnSelectedItemChangedListener onSelectedItemChangedListener;
+        private RecyclerView.OnScrollListener scrollListener;
 
         @Override
         public void onAttach(Context context) {
@@ -220,15 +221,21 @@ public class GalleryView extends RelativeLayout {
 
         @Override
         public void onSaveInstanceState(Bundle outState) {
-            outState.putInt("SelectedIndex", selectedIndex);
             super.onSaveInstanceState(outState);
+            outState.putInt("SelectedIndex", selectedIndex);
+            outState.putInt("viewWidth", viewWidth);
         }
 
         @Override
         public void onActivityCreated(@Nullable Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
-            if (savedInstanceState != null && savedInstanceState.containsKey("SelectedIndex"))
+            if (savedInstanceState != null && savedInstanceState.containsKey("viewWidth"))
+                viewWidth = savedInstanceState.getInt("viewWidth");
+            if (savedInstanceState != null && savedInstanceState.containsKey("SelectedIndex")) {
                 selectedIndex = savedInstanceState.getInt("SelectedIndex");
+                scrollToIndex(selectedIndex);
+            }
+
         }
 
         @Override
@@ -252,11 +259,22 @@ public class GalleryView extends RelativeLayout {
             }, 100);
         }
 
+        @Override
+        public void setUserVisibleHint(boolean isVisibleToUser) {
+            super.setUserVisibleHint(isVisibleToUser);
+            if (isVisibleToUser) {
+                scrollToIndex(selectedIndex);
+            }
+        }
+
         public void setAdapter(RecyclerView.Adapter adapter) {
             this.adapter = adapter;
             if (recyclerView != null) {
                 recyclerView.setAdapter(getThisAdapter());
-                recyclerView.addOnScrollListener(getScrollListener());
+                if (scrollListener == null) {
+                    scrollListener = getScrollListener();
+                    recyclerView.addOnScrollListener(scrollListener);
+                }
                 recyclerView.post(new Runnable() {
                     @Override
                     public void run() {
@@ -300,7 +318,7 @@ public class GalleryView extends RelativeLayout {
                         return;
                     float firstPosition = (index - 1) * viewWidth;
                     float percent = ((float) currentX - firstPosition) / ((index * viewWidth) - firstPosition);
-                    if (percent > 1) {
+                    if (percent >= 1) {
                         index++;
                         percent = 0;
                     }
@@ -309,6 +327,7 @@ public class GalleryView extends RelativeLayout {
                         percent = 1;
                     }
                     View nextView = galleryViews.get(index + 1);
+                    View previousView = galleryViews.get(index - 1);
                     View currentView = galleryViews.get(index);
                     if (nextView != null) {
                         nextView.setScaleX(((1 - scale) + (percent * scale)));
@@ -320,6 +339,12 @@ public class GalleryView extends RelativeLayout {
                         currentView.setScaleX((1 - (percent * scale)));
                         currentView.setRotationY((rotationY * percent));
                     }
+                    if (previousView != null) {
+                        currentView.setScaleY((1 - (percent * scale)));
+                        currentView.setScaleX((1 - (percent * scale)));
+                        currentView.setRotationY((rotationY * percent));
+                    }
+                    Log.d("@Position", currentX + " , " + viewWidth);
                 }
             };
         }
@@ -340,6 +365,7 @@ public class GalleryView extends RelativeLayout {
             if (onSelectedItemChangedListener != null && lastIndex != selectedIndex)
                 onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex), selectedIndex);
             lastIndex = selectedIndex;
+            notifyDataSetChanged();
         }
 
         private RecyclerView.Adapter getThisAdapter() {
@@ -356,6 +382,8 @@ public class GalleryView extends RelativeLayout {
                     }
                     RecyclerView.ViewHolder viewHolder = adapter.onCreateViewHolder(parent, viewType);
                     viewHolder.itemView.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
+                    viewHolder.itemView.setScaleX(1 - scale);
+                    viewHolder.itemView.setScaleY(1 - scale);
                     viewWidth = viewHolder.itemView.getMeasuredWidth();
                     return viewHolder;
                 }
@@ -368,12 +396,24 @@ public class GalleryView extends RelativeLayout {
                             @Override
                             public void run() {
                                 int size = (getWidth() - viewWidth) / 2;
+                                Log.e("@Size", size + "," + viewWidth);
                                 ((MyHolder) holder).view.setLayoutParams(new RelativeLayout.LayoutParams(size, ViewGroup.LayoutParams.WRAP_CONTENT));
                             }
                         });
 
                     } else {
                         adapter.onBindViewHolder(holder, position - 1);
+                        if (rotationY != 0 || scale != 0) {
+                            if (selectedIndex != position - 1) {
+                                holder.itemView.setScaleY(1 - scale);
+                                holder.itemView.setScaleX(1 - scale);
+                                holder.itemView.setRotationY(rotationY);
+                            } else {
+                                holder.itemView.setScaleY(1f);
+                                holder.itemView.setScaleX(1f);
+                                holder.itemView.setRotationY(0f);
+                            }
+                        }
                         holder.itemView.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -391,18 +431,6 @@ public class GalleryView extends RelativeLayout {
                                 }
                             }
                         });
-                        if (rotationY == 0 && scale == 0)
-                            return;
-                        if (selectedIndex != position - 1) {
-                            holder.itemView.setScaleY(1 - scale);
-                            holder.itemView.setScaleX(1 - scale);
-                            holder.itemView.setRotationY(rotationY);
-                        } else {
-                            holder.itemView.setScaleY(1f);
-                            holder.itemView.setScaleX(1f);
-                            holder.itemView.setRotationY(0f);
-                        }
-
                     }
 
 
@@ -435,6 +463,8 @@ public class GalleryView extends RelativeLayout {
 
             public MyHolder(View itemView) {
                 super(itemView);
+                itemView.setScaleX(1 - scale);
+                itemView.setScaleY(1 - scale);
                 view = new View(mContext);
                 view.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             }
@@ -475,15 +505,21 @@ public class GalleryView extends RelativeLayout {
             return selectedIndex;
         }
 
-        public void setSelectedIndex(int selectedIndex) {
+        public void setSelectedIndex(final int selectedIndex) {
             if (selectedIndex < 0 || selectedIndex >= adapter.getItemCount())
                 throw new NullPointerException("Index is more than gallery size");
             this.selectedIndex = selectedIndex;
-            scrollToIndex(selectedIndex);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    scrollToIndex(selectedIndex);
+                    notifyDataSetChanged();
+                }
+            }, 10);
         }
 
         private void scrollToIndex(int selectedIndex) {
-            if (recyclerView != null) {
+            if (recyclerView != null && viewWidth != 0) {
                 int newPosition = selectedIndex * viewWidth;
                 recyclerView.scrollBy(newPosition - currentX, 0);
                 if (onSelectedItemChangedListener != null && lastIndex != selectedIndex) {
