@@ -344,7 +344,6 @@ public class GalleryView extends RelativeLayout {
                         currentView.setScaleX((1 - (percent * scale)));
                         currentView.setRotationY((rotationY * percent));
                     }
-                    Log.d("@Position", currentX + " , " + viewWidth);
                 }
             };
         }
@@ -365,7 +364,7 @@ public class GalleryView extends RelativeLayout {
             if (onSelectedItemChangedListener != null && lastIndex != selectedIndex)
                 onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex), selectedIndex);
             lastIndex = selectedIndex;
-            notifyDataSetChanged();
+            //notifyDataSetChanged();
         }
 
         private RecyclerView.Adapter getThisAdapter() {
@@ -396,7 +395,6 @@ public class GalleryView extends RelativeLayout {
                             @Override
                             public void run() {
                                 int size = (getWidth() - viewWidth) / 2;
-                                Log.e("@Size", size + "," + viewWidth);
                                 ((MyHolder) holder).view.setLayoutParams(new RelativeLayout.LayoutParams(size, ViewGroup.LayoutParams.WRAP_CONTENT));
                             }
                         });
