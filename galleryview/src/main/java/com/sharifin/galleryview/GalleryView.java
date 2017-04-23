@@ -1,5 +1,6 @@
 package com.sharifin.galleryview;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -196,6 +197,8 @@ public class GalleryView extends RelativeLayout {
         private float rotationY = 0;
         private OnSelectedItemChangedListener onSelectedItemChangedListener;
         private RecyclerView.OnScrollListener scrollListener;
+        boolean canSmooth = false;
+        private int scrollIndex = 1;
 
         @Override
         public void onAttach(Context context) {
@@ -295,55 +298,100 @@ public class GalleryView extends RelativeLayout {
         private RecyclerView.OnScrollListener getScrollListener() {
             return new RecyclerView.OnScrollListener() {
 
-                boolean canSmooth = false;
-                int index;
+
+                float localX = 0;
 
                 @Override
                 public void onScrollStateChanged(final RecyclerView recyclerView, int newState) {
                     super.onScrollStateChanged(recyclerView, newState);
                     if (newState == 0 && canSmooth) {
+                        Log.d("@Index1", scrollIndex + "," + selectedIndex);
                         calculateCenter();
+//                        if (scrollIndex != selectedIndex && scrollIndex != selectedIndex + 1)
+//                            notifyDataSetChanged();
                         canSmooth = false;
                     }
                     if (newState == 1) {
                         canSmooth = true;
-                        index = selectedIndex + 1;
+                        localX = 0;
                     }
+
                 }
 
                 @Override
                 public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                     currentX += dx;
+                    localX += dx;
                     if (rotationY == 0 && scale == 0)
                         return;
-                    float firstPosition = (index - 1) * viewWidth;
-                    float percent = ((float) currentX - firstPosition) / ((index * viewWidth) - firstPosition);
+                    if (currentX == 0)
+                        return;
+                    float percent = ((float) currentX - (viewWidth * (scrollIndex - 1))) / (viewWidth);
                     if (percent >= 1) {
-                        index++;
+                        scrollIndex++;
                         percent = 0;
                     }
                     if (percent < 0) {
-                        index--;
+                        scrollIndex--;
                         percent = 1;
                     }
-                    View nextView = galleryViews.get(index + 1);
-                    View previousView = galleryViews.get(index - 1);
-                    View currentView = galleryViews.get(index);
+
+
+                    View nextView = recyclerView.findViewWithTag(scrollIndex + 1);
+                    View previousView = recyclerView.findViewWithTag(scrollIndex - 1);
+                    View currentView = recyclerView.findViewWithTag(scrollIndex);
+
+//                    if (nextView != null && (nextView.getScaleX() > 1 - scale || (nextView.getScaleX() == 1 - scale && dx > 0))) {
                     if (nextView != null) {
                         nextView.setScaleX(((1 - scale) + (percent * scale)));
                         nextView.setScaleY(((1 - scale) + (percent * scale)));
                         nextView.setRotationY(rotationY + ((-1 * rotationY) * percent));
                     }
+//                    if (previousView != null && (previousView.getScaleX() > 1 - scale || (previousView.getScaleX() == 1 - scale && dx < 0))) {
+//                        previousView.setScaleX(((1 - scale) + (percent * scale)));
+//                        previousView.setScaleY(((1 - scale) + (percent * scale)));
+//                        previousView.setRotationY(rotationY + ((-1 * rotationY) * percent));
+//                    }
                     if (currentView != null) {
+                        Log.d("@Index", scrollIndex + "," + percent + "," + currentX);
                         currentView.setScaleY((1 - (percent * scale)));
                         currentView.setScaleX((1 - (percent * scale)));
                         currentView.setRotationY((rotationY * percent));
                     }
-                    if (previousView != null) {
-                        currentView.setScaleY((1 - (percent * scale)));
-                        currentView.setScaleX((1 - (percent * scale)));
-                        currentView.setRotationY((rotationY * percent));
-                    }
+
+
+//                    float firstPosition = (index - 1) * viewWidth;
+//                    float percent = ((float) currentX - firstPosition) / ((index * viewWidth) - firstPosition);
+//                    if (percent >= 1) {
+//                        index++;
+//                        percent = 0;
+//                    }
+//                    if (percent < 0) {
+//                        index--;
+//                        percent = 1;
+//                    }
+//                    Log.d("@Index", index + "");
+////                    View nextView = galleryViews.get(index + 1);
+////                    View previousView = galleryViews.get(index - 1);
+////                    View currentView = galleryViews.get(index);
+//                    View nextView = recyclerView.findViewWithTag(index + 1);
+//                    View previousView = recyclerView.findViewWithTag(index - 1);
+//                    View currentView = recyclerView.findViewWithTag(index);
+//                    if (nextView != null) {
+//                        nextView.setScaleX(((1 - scale) + (percent * scale)));
+//                        nextView.setScaleY(((1 - scale) + (percent * scale)));
+//                        nextView.setRotationY(rotationY + ((-1 * rotationY) * percent));
+//                    }
+//                    if (currentView != null) {
+//                        currentView.setScaleY((1 - (percent * scale)));
+//                        currentView.setScaleX((1 - (percent * scale)));
+//                        currentView.setRotationY((rotationY * percent));
+//                    }
+//                    if (previousView != null) {
+//                        previousView.setScaleX(((1 - scale) + (percent * scale)));
+//                        previousView.setScaleY(((1 - scale) + (percent * scale)));
+//                        previousView.setRotationY(rotationY + ((-1 * rotationY) * percent));
+//                    }
                 }
             };
         }
@@ -364,7 +412,8 @@ public class GalleryView extends RelativeLayout {
             if (onSelectedItemChangedListener != null && lastIndex != selectedIndex)
                 onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex), selectedIndex);
             lastIndex = selectedIndex;
-            //notifyDataSetChanged();
+
+//            notifyDataSetChanged();
         }
 
         private RecyclerView.Adapter getThisAdapter() {
@@ -390,6 +439,7 @@ public class GalleryView extends RelativeLayout {
                 @Override
                 public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
                     galleryViews.put(position, holder.itemView);
+                    holder.itemView.setTag(position);
                     if (holder.getItemViewType() == -100) {
                         new Handler().post(new Runnable() {
                             @Override
@@ -403,14 +453,19 @@ public class GalleryView extends RelativeLayout {
                         adapter.onBindViewHolder(holder, position - 1);
                         if (rotationY != 0 || scale != 0) {
                             if (selectedIndex != position - 1) {
+//                                ObjectAnimator.ofFloat(holder.itemView, "scaleX", holder.itemView.getScaleX(), 1 - scale).setDuration(400).start();
+//                                ObjectAnimator.ofFloat(holder.itemView, "scaleY", holder.itemView.getScaleY(), 1 - scale).setDuration(400).start();
                                 holder.itemView.setScaleY(1 - scale);
                                 holder.itemView.setScaleX(1 - scale);
                                 holder.itemView.setRotationY(rotationY);
                             } else {
+//                                ObjectAnimator.ofFloat(holder.itemView, "scaleX", holder.itemView.getScaleX(), 1f).setDuration(400).start();
+//                                ObjectAnimator.ofFloat(holder.itemView, "scaleY", holder.itemView.getScaleY(), 1f).setDuration(400).start();
                                 holder.itemView.setScaleY(1f);
                                 holder.itemView.setScaleX(1f);
                                 holder.itemView.setRotationY(0f);
                             }
+                            Log.d("@Position", position + "," + selectedIndex);
                         }
                         holder.itemView.setOnClickListener(new OnClickListener() {
                             @Override
@@ -430,8 +485,6 @@ public class GalleryView extends RelativeLayout {
                             }
                         });
                     }
-
-
                 }
 
                 @Override
@@ -507,6 +560,7 @@ public class GalleryView extends RelativeLayout {
             if (selectedIndex < 0 || selectedIndex >= adapter.getItemCount())
                 throw new NullPointerException("Index is more than gallery size");
             this.selectedIndex = selectedIndex;
+            scrollIndex = selectedIndex + 1;
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -531,6 +585,7 @@ public class GalleryView extends RelativeLayout {
             if (selectedIndex < 0 || selectedIndex >= adapter.getItemCount())
                 throw new ArrayIndexOutOfBoundsException("Index is more than gallery size");
             this.selectedIndex = selectedIndex;
+            scrollIndex = selectedIndex + 1;
             if (recyclerView != null)
                 smoothRecycler(selectedIndex);
         }

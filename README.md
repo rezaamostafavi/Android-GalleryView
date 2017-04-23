@@ -18,7 +18,7 @@ allprojects {
 #####Step 2. Add the dependency
 ```build
 dependencies {
-	compile 'com.github.rezaamostafavi:Android-GalleryView:v1.0.5'
+	compile 'com.github.rezaamostafavi:Android-GalleryView:v1.0.6'
 }
 ```
 	

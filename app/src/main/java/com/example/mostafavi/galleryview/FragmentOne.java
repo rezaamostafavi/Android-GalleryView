@@ -48,7 +48,7 @@ public class FragmentOne extends Fragment {
 
             @Override
             public int getItemCount() {
-                return 8;
+                return 28;
             }
         });
 
