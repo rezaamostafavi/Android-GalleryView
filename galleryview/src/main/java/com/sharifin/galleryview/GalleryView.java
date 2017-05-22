@@ -236,6 +236,7 @@ public class GalleryView extends RelativeLayout {
                 viewWidth = savedInstanceState.getInt("viewWidth");
             if (savedInstanceState != null && savedInstanceState.containsKey("SelectedIndex")) {
                 selectedIndex = savedInstanceState.getInt("SelectedIndex");
+                scrollIndex = selectedIndex + 1;
                 scrollToIndex(selectedIndex);
             }
 
@@ -305,7 +306,6 @@ public class GalleryView extends RelativeLayout {
                 public void onScrollStateChanged(final RecyclerView recyclerView, int newState) {
                     super.onScrollStateChanged(recyclerView, newState);
                     if (newState == 0 && canSmooth) {
-                        Log.d("@Index1", scrollIndex + "," + selectedIndex);
                         calculateCenter();
 //                        if (scrollIndex != selectedIndex && scrollIndex != selectedIndex + 1)
 //                            notifyDataSetChanged();
@@ -338,60 +338,20 @@ public class GalleryView extends RelativeLayout {
 
 
                     View nextView = recyclerView.findViewWithTag(scrollIndex + 1);
-                    View previousView = recyclerView.findViewWithTag(scrollIndex - 1);
                     View currentView = recyclerView.findViewWithTag(scrollIndex);
 
-//                    if (nextView != null && (nextView.getScaleX() > 1 - scale || (nextView.getScaleX() == 1 - scale && dx > 0))) {
                     if (nextView != null) {
                         nextView.setScaleX(((1 - scale) + (percent * scale)));
                         nextView.setScaleY(((1 - scale) + (percent * scale)));
                         nextView.setRotationY(rotationY + ((-1 * rotationY) * percent));
                     }
-//                    if (previousView != null && (previousView.getScaleX() > 1 - scale || (previousView.getScaleX() == 1 - scale && dx < 0))) {
-//                        previousView.setScaleX(((1 - scale) + (percent * scale)));
-//                        previousView.setScaleY(((1 - scale) + (percent * scale)));
-//                        previousView.setRotationY(rotationY + ((-1 * rotationY) * percent));
-//                    }
                     if (currentView != null) {
-                        Log.d("@Index", scrollIndex + "," + percent + "," + currentX);
                         currentView.setScaleY((1 - (percent * scale)));
                         currentView.setScaleX((1 - (percent * scale)));
                         currentView.setRotationY((rotationY * percent));
                     }
+//                    Log.d("@Position-Gallery", scrollIndex + "," + selectedIndex);
 
-
-//                    float firstPosition = (index - 1) * viewWidth;
-//                    float percent = ((float) currentX - firstPosition) / ((index * viewWidth) - firstPosition);
-//                    if (percent >= 1) {
-//                        index++;
-//                        percent = 0;
-//                    }
-//                    if (percent < 0) {
-//                        index--;
-//                        percent = 1;
-//                    }
-//                    Log.d("@Index", index + "");
-////                    View nextView = galleryViews.get(index + 1);
-////                    View previousView = galleryViews.get(index - 1);
-////                    View currentView = galleryViews.get(index);
-//                    View nextView = recyclerView.findViewWithTag(index + 1);
-//                    View previousView = recyclerView.findViewWithTag(index - 1);
-//                    View currentView = recyclerView.findViewWithTag(index);
-//                    if (nextView != null) {
-//                        nextView.setScaleX(((1 - scale) + (percent * scale)));
-//                        nextView.setScaleY(((1 - scale) + (percent * scale)));
-//                        nextView.setRotationY(rotationY + ((-1 * rotationY) * percent));
-//                    }
-//                    if (currentView != null) {
-//                        currentView.setScaleY((1 - (percent * scale)));
-//                        currentView.setScaleX((1 - (percent * scale)));
-//                        currentView.setRotationY((rotationY * percent));
-//                    }
-//                    if (previousView != null) {
-//                        previousView.setScaleX(((1 - scale) + (percent * scale)));
-//                        previousView.setScaleY(((1 - scale) + (percent * scale)));
-//                        previousView.setRotationY(rotationY + ((-1 * rotationY) * percent));
-//                    }
                 }
             };
         }
@@ -410,7 +370,7 @@ public class GalleryView extends RelativeLayout {
             int toPosition = ((position) * viewWidth);
             recyclerView.smoothScrollBy(toPosition - getCurrentX(), 0);
             if (onSelectedItemChangedListener != null && lastIndex != selectedIndex)
-                onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex), selectedIndex);
+                onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex + 1), selectedIndex);
             lastIndex = selectedIndex;
 
 //            notifyDataSetChanged();
@@ -465,7 +425,6 @@ public class GalleryView extends RelativeLayout {
                                 holder.itemView.setScaleX(1f);
                                 holder.itemView.setRotationY(0f);
                             }
-                            Log.d("@Position", position + "," + selectedIndex);
                         }
                         holder.itemView.setOnClickListener(new OnClickListener() {
                             @Override
@@ -575,7 +534,7 @@ public class GalleryView extends RelativeLayout {
                 int newPosition = selectedIndex * viewWidth;
                 recyclerView.scrollBy(newPosition - currentX, 0);
                 if (onSelectedItemChangedListener != null && lastIndex != selectedIndex) {
-                    onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex), selectedIndex);
+                    onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex + 1), selectedIndex);
                 }
                 lastIndex = selectedIndex;
             }

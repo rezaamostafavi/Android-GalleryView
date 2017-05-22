@@ -66,7 +66,10 @@ public class FragmentOne extends Fragment {
             }
         });
 
-        galleryView.smoothToPosition(2);
+        galleryView.notifyDataSetChanged();
+        galleryView.smoothToPosition(1);
+        galleryView.notifyDataSetChanged();
+        galleryView.smoothToPosition(1);
         return view;
     }
 
