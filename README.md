@@ -1,11 +1,12 @@
 # Android-GalleryView
 A beautiful Gallery View (cover flow) for android platform , base on RecyclerView.
 
-#Gif
+## Gif
 <img src="https://github.com/rezaamostafavi/Android-GalleryView/blob/master/gif/help.gif?raw=true" width="40%" height="40%">
 
-##Build
-#####Step 1. Add the JitPack repository to your build file
+## Build
+[![](https://jitpack.io/v/rezaamostafavi/Android-GalleryView.svg)](https://jitpack.io/#rezaamostafavi/Android-GalleryView)
+##### Step 1. Add the JitPack repository to your build file
 ```build
 allprojects {
 	repositories {
@@ -15,14 +16,14 @@ allprojects {
 }
 ```
 
-#####Step 2. Add the dependency
-```build
+##### Step 2. Add the dependency
+```build 
 dependencies {
 	compile 'com.github.rezaamostafavi:Android-GalleryView:v1.0.8'
 }
 ```
 	
-##Layout
+## Layout
 
 ```layout
 	<com.sharifin.galleryview.GalleryView
@@ -52,7 +53,7 @@ dependencies {
         });
 ```
 
-#Lincense
+# Lincense
 ```lincense
 The MIT License (MIT)
 
