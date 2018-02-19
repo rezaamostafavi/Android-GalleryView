@@ -174,9 +174,14 @@ public class GalleryView extends RelativeLayout {
             fragment.setOverScrollMode(overScrollMode);
     }
 
+    public void setViewWidth(int viewWidth) {
+        if (fragment != null)
+            fragment.setViewWidth(viewWidth);
+    }
+
     public RecyclerView getRecyclerView() {
         if (fragment != null)
-            fragment.getRecyclerView();
+            return fragment.getRecyclerView();
         return null;
     }
 
@@ -186,7 +191,7 @@ public class GalleryView extends RelativeLayout {
         private RecyclerView recyclerView;
         private RecyclerView.Adapter adapter;
         private int pageWidth;
-        private static int viewWidth;
+        private int viewWidth = -1;
         private int currentX = 0, overScrollMode;
         private int width;
         private int selectedIndex = 0;
@@ -275,6 +280,7 @@ public class GalleryView extends RelativeLayout {
             this.adapter = adapter;
             if (recyclerView != null) {
                 recyclerView.setAdapter(getThisAdapter());
+                currentX = 0;
                 if (scrollListener == null) {
                     scrollListener = getScrollListener();
                     recyclerView.addOnScrollListener(scrollListener);
@@ -298,8 +304,6 @@ public class GalleryView extends RelativeLayout {
         @NonNull
         private RecyclerView.OnScrollListener getScrollListener() {
             return new RecyclerView.OnScrollListener() {
-
-
                 float localX = 0;
 
                 @Override
@@ -307,15 +311,12 @@ public class GalleryView extends RelativeLayout {
                     super.onScrollStateChanged(recyclerView, newState);
                     if (newState == 0 && canSmooth) {
                         calculateCenter();
-//                        if (scrollIndex != selectedIndex && scrollIndex != selectedIndex + 1)
-//                            notifyDataSetChanged();
                         canSmooth = false;
                     }
                     if (newState == 1) {
                         canSmooth = true;
                         localX = 0;
                     }
-
                 }
 
                 @Override
@@ -335,11 +336,8 @@ public class GalleryView extends RelativeLayout {
                         scrollIndex--;
                         percent = 1;
                     }
-
-
                     View nextView = recyclerView.findViewWithTag(scrollIndex + 1);
                     View currentView = recyclerView.findViewWithTag(scrollIndex);
-
                     if (nextView != null) {
                         nextView.setScaleX(((1 - scale) + (percent * scale)));
                         nextView.setScaleY(((1 - scale) + (percent * scale)));
@@ -350,8 +348,6 @@ public class GalleryView extends RelativeLayout {
                         currentView.setScaleX((1 - (percent * scale)));
                         currentView.setRotationY((rotationY * percent));
                     }
-//                    Log.d("@Position-Gallery", scrollIndex + "," + selectedIndex);
-
                 }
             };
         }
@@ -364,6 +360,7 @@ public class GalleryView extends RelativeLayout {
                 index = adapter.getItemCount();
             selectedIndex = (int) index;
             smoothRecycler(selectedIndex);
+
         }
 
         private void smoothRecycler(final int position) {
@@ -372,8 +369,12 @@ public class GalleryView extends RelativeLayout {
             if (onSelectedItemChangedListener != null && lastIndex != selectedIndex)
                 onSelectedItemChangedListener.onSelectedChange(galleryViews.get(selectedIndex + 1), selectedIndex);
             lastIndex = selectedIndex;
-
-//            notifyDataSetChanged();
+            recyclerView.post(new Runnable() {
+                @Override
+                public void run() {
+                    notifyDataSetChanged();
+                }
+            });
         }
 
         private RecyclerView.Adapter getThisAdapter() {
@@ -392,7 +393,8 @@ public class GalleryView extends RelativeLayout {
                     viewHolder.itemView.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
                     viewHolder.itemView.setScaleX(1 - scale);
                     viewHolder.itemView.setScaleY(1 - scale);
-                    viewWidth = viewHolder.itemView.getMeasuredWidth();
+                    if (viewWidth == -1)
+                        viewWidth = viewHolder.itemView.getMeasuredWidth();
                     return viewHolder;
                 }
 
@@ -401,26 +403,26 @@ public class GalleryView extends RelativeLayout {
                     galleryViews.put(position, holder.itemView);
                     holder.itemView.setTag(position);
                     if (holder.getItemViewType() == -100) {
-                        new Handler().post(new Runnable() {
-                            @Override
-                            public void run() {
-                                int size = (getWidth() - viewWidth) / 2;
-                                ((MyHolder) holder).view.setLayoutParams(new RelativeLayout.LayoutParams(size, ViewGroup.LayoutParams.WRAP_CONTENT));
-                            }
-                        });
-
+                        if (viewWidth == -1) {
+                            new Handler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    int size = (getWidth() - viewWidth) / 2;
+                                    ((MyHolder) holder).view.setLayoutParams(new RelativeLayout.LayoutParams(size, ViewGroup.LayoutParams.WRAP_CONTENT));
+                                }
+                            });
+                        } else {
+                            int size = (getWidth() - viewWidth) / 2;
+                            ((MyHolder) holder).view.setLayoutParams(new RelativeLayout.LayoutParams(size, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        }
                     } else {
                         adapter.onBindViewHolder(holder, position - 1);
                         if (rotationY != 0 || scale != 0) {
                             if (selectedIndex != position - 1) {
-//                                ObjectAnimator.ofFloat(holder.itemView, "scaleX", holder.itemView.getScaleX(), 1 - scale).setDuration(400).start();
-//                                ObjectAnimator.ofFloat(holder.itemView, "scaleY", holder.itemView.getScaleY(), 1 - scale).setDuration(400).start();
                                 holder.itemView.setScaleY(1 - scale);
                                 holder.itemView.setScaleX(1 - scale);
                                 holder.itemView.setRotationY(rotationY);
                             } else {
-//                                ObjectAnimator.ofFloat(holder.itemView, "scaleX", holder.itemView.getScaleX(), 1f).setDuration(400).start();
-//                                ObjectAnimator.ofFloat(holder.itemView, "scaleY", holder.itemView.getScaleY(), 1f).setDuration(400).start();
                                 holder.itemView.setScaleY(1f);
                                 holder.itemView.setScaleX(1f);
                                 holder.itemView.setRotationY(0f);
@@ -550,8 +552,9 @@ public class GalleryView extends RelativeLayout {
         }
 
         public void notifyDataSetChanged() {
-            if (recyclerView != null && recyclerView.getAdapter() != null)
+            if (recyclerView != null && recyclerView.getAdapter() != null) {
                 recyclerView.getAdapter().notifyDataSetChanged();
+            }
         }
 
         public OnSelectedItemChangedListener getOnSelectedItemChangedListener() {
@@ -570,6 +573,10 @@ public class GalleryView extends RelativeLayout {
 
         public RecyclerView getRecyclerView() {
             return recyclerView;
+        }
+
+        public void setViewWidth(int viewWidth) {
+            this.viewWidth = viewWidth;
         }
     }
 

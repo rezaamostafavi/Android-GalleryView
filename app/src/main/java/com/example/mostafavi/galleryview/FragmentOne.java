@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,6 +34,7 @@ public class FragmentOne extends Fragment {
     public View onCreateView(final LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_one, container, false);
         GalleryView galleryView = (GalleryView) view.findViewById(R.id.galleryView);
+        galleryView.setViewWidth(dpToPX(mContext, 150));
         galleryView.setAdapter(new RecyclerView.Adapter() {
             @Override
             public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -82,5 +84,10 @@ public class FragmentOne extends Fragment {
             tvPassUnit = (TextView) itemView.findViewById(R.id.tvPassSession);
 
         }
+    }
+
+    public static int dpToPX(Context context, int dp) {
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        return (int) ((dp * displayMetrics.density) + 0.5);
     }
 }
